@@ -1,40 +1,22 @@
-// Create web server
+//Create web server
 
-const express = require("express");
-const bodyParser = require("body-parser");
-const { randomBytes } = require("crypto");
-const cors = require("cors");
+var http = require("http");
+var fs = require("fs");
+var port = 8080;
 
-// Create a new express application
-const app = express();
-// Parse incoming request bodies in a middleware before your handlers, available under the req.body property.
-app.use(bodyParser.json());
-// Enable CORS
-app.use(cors());
-
-const commentsByPostId = {};
-
-app.get("/posts/:id/comments", (req, res) => {
-  res.send(commentsByPostId[req.params.id] || []);
+var server = http.createServer(function (req, res) {
+  if (req.url === "/comments.json") {
+    fs.readFile("./comments.json", function (err, data) {
+      if (err) {
+        console.log(err);
+      } else {
+        res.setHeader("Content-Type", "application/json");
+        res.end(data);
+      }
+    });
+  }
 });
 
-// Create a new comment
-app.post("/posts/:id/comments", (req, res) => {
-  const commentId = randomBytes(4).toString("hex");
-  // req.body is a JSON object that will be sent by the client
-  const { content } = req.body;
-  // Get the comments array for the post
-  const comments = commentsByPostId[req.params.id] || [];
-  // Add the new comment
-  comments.push({ id: commentId, content });
-  // Update the comments array
-  commentsByPostId[req.params.id] = comments;
-
-  // Send back the new comment
-  res.status(201).send(comments);
-});
-
-// Listen on port 4001
-app.listen(4001, () => {
-  console.log("Listening on 4001");
+server.listen(port, function () {
+  console.log("Server listening on port " + port);
 });
